@@ -189,13 +189,26 @@
         }
 
         function playAudio() {
-            const word = document.getElementById('english-word').textContent;
-            const msg = new SpeechSynthesisUtterance(word);
-            msg.lang = 'en-US';
-            window.speechSynthesis.speak(msg);
-        }
+    const word = document.getElementById('english-word').textContent;
 
-        window.onload = loadWords;
+    // Check if SpeechSynthesis API is supported
+    if ('speechSynthesis' in window) {
+        const msg = new SpeechSynthesisUtterance(word);
+        msg.lang = 'en-US';
+
+        // Check if user interaction has already occurred
+        if (!window.speechSynthesis.speaking) {
+            window.speechSynthesis.speak(msg);
+        } else {
+            // Cancel any ongoing speech before speaking again
+            window.speechSynthesis.cancel();
+            setTimeout(() => window.speechSynthesis.speak(msg), 100);
+        }
+    } else {
+        alert('Speech Synthesis not supported in this browser.');
+    }
+}
+
     </script>
 
 </body>

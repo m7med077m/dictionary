@@ -171,14 +171,18 @@
         }
 
         async function loadWords() {
-            const response = await fetch('text.txt');
-            const text = await response.text();
-            const lines = text.split('\n').filter(line => line.trim() !== '');
-            wordsList = lines.map(line => {
-                const parts = line.split('|');
-                return { english: parts[0].trim(), arabic: parts[1].trim() };
-            });
-            getRandomWord();
+            try {
+                const response = await fetch('sam.txt', { cache: 'no-store' });
+                const text = await response.text();
+                const lines = text.split('\n').filter(line => line.trim() !== '');
+                wordsList = lines.map(line => {
+                    const parts = line.split('|');
+                    return { english: parts[0].trim(), arabic: parts[1].trim() };
+                });
+                getRandomWord();
+            } catch (error) {
+                console.error('Error loading words:', error);
+            }
         }
 
         function getRandomWord() {
@@ -189,26 +193,29 @@
         }
 
         function playAudio() {
-    const word = document.getElementById('english-word').textContent;
+            const word = document.getElementById('english-word').textContent;
 
-    // Check if SpeechSynthesis API is supported
-    if ('speechSynthesis' in window) {
-        const msg = new SpeechSynthesisUtterance(word);
-        msg.lang = 'en-US';
+            if ('speechSynthesis' in window) {
+                const msg = new SpeechSynthesisUtterance(word);
+                msg.lang = 'en-US';
 
-        // Check if user interaction has already occurred
-        if (!window.speechSynthesis.speaking) {
-            window.speechSynthesis.speak(msg);
-        } else {
-            // Cancel any ongoing speech before speaking again
-            window.speechSynthesis.cancel();
-            setTimeout(() => window.speechSynthesis.speak(msg), 100);
+                // Fix for iOS devices to require user interaction before speaking
+                if (window.speechSynthesis.speaking) {
+                    window.speechSynthesis.cancel();
+                }
+                setTimeout(() => {
+                    window.speechSynthesis.speak(msg);
+                }, 100);
+            } else {
+                alert('Speech Synthesis not supported in this browser.');
+            }
         }
-    } else {
-        alert('Speech Synthesis not supported in this browser.');
-    }
-}
 
+        document.addEventListener('DOMContentLoaded', () => {
+            loadWords();
+            // Refresh words on button click
+            document.querySelector('button').addEventListener('click', getRandomWord);
+        });
     </script>
 
 </body>
